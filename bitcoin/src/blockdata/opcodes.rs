@@ -12,8 +12,6 @@ use core::convert::From;
 use core::{fmt, str};
 
 use internals::debug_from_display;
-#[cfg(feature = "serde")]
-use serde;
 
 #[cfg(feature = "serde")]
 use crate::prelude::*;
@@ -67,10 +65,10 @@ macro_rules! all_opcodes {
         pub static OP_NOP3: Opcode = OP_CSV;
 
         impl fmt::Display for Opcode {
-            fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+            fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
                  match *self {
                    $(
-                        $op => fmt::Display::fmt(stringify!($op), f),
+                        $op => core::fmt::Display::fmt(stringify!($op), f),
                     )+
                 }
             }
@@ -518,7 +516,7 @@ macro_rules! ordinary_opcode {
         }
 
         impl fmt::Display for Ordinary {
-            fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+            fn fmt(&self, f: &mut fmt::Formatter) -> core::fmt::Result {
                 match *self {
                    $(Ordinary::$op => { f.pad(stringify!($op)) }),*
                 }

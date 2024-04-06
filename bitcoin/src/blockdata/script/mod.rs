@@ -76,11 +76,32 @@ mod tests;
 pub mod witness_program;
 pub mod witness_version;
 
-pub use self::borrowed::*;
-pub use self::builder::*;
-pub use self::instruction::*;
-pub use self::owned::*;
-pub use self::push_bytes::*;
+use alloc::rc::Rc;
+#[cfg(any(not(rust_v_1_60), target_has_atomic = "ptr"))]
+use alloc::sync::Arc;
+use core::cmp::Ordering;
+use core::fmt;
+use core::ops::{Deref, DerefMut};
+
+use hashes::{hash160, sha256};
+use io::{BufRead, Write};
+
+use crate::blockdata::opcodes::all::*;
+use crate::blockdata::opcodes::{self, Opcode};
+use crate::consensus::{encode, Decodable, Encodable};
+use crate::internal_macros::impl_asref_push_bytes;
+use crate::prelude::*;
+use crate::OutPoint;
+
+#[rustfmt::skip]                // Keep public re-exports separate.
+#[doc(inline)]
+pub use self::{
+    borrowed::*,
+    builder::*,
+    instruction::*,
+    owned::*,
+    push_bytes::*,
+};
 
 /// The default maximum size of scriptints.
 const DEFAULT_MAX_SCRIPTINT_SIZE: usize = 4;
@@ -91,7 +112,7 @@ hashes::hash_newtype! {
     /// SegWit version of a Bitcoin Script bytecode hash.
     pub struct WScriptHash(sha256::Hash);
 }
-crate::hash_types::impl_asref_push_bytes!(ScriptHash, WScriptHash);
+impl_asref_push_bytes!(ScriptHash, WScriptHash);
 
 impl From<ScriptBuf> for ScriptHash {
     fn from(script: ScriptBuf) -> ScriptHash { script.script_hash() }
@@ -133,7 +154,7 @@ pub fn write_scriptint(out: &mut [u8; 8], n: i64) -> usize {
 
     let neg = n < 0;
 
-    let mut abs = if neg { -n } else { n } as usize;
+    let mut abs = n.unsigned_abs();
     while abs > 0xFF {
         out[len] = (abs & 0xFF) as u8;
         len += 1;
@@ -630,21 +651,21 @@ impl<'de> serde::Deserialize<'de> for ScriptBuf {
 
 impl Encodable for Script {
     #[inline]
-    fn consensus_encode<W: io::Write + ?Sized>(&self, w: &mut W) -> Result<usize, io::Error> {
+    fn consensus_encode<W: Write + ?Sized>(&self, w: &mut W) -> Result<usize, io::Error> {
         crate::consensus::encode::consensus_encode_with_size(&self.0, w)
     }
 }
 
 impl Encodable for ScriptBuf {
     #[inline]
-    fn consensus_encode<W: io::Write + ?Sized>(&self, w: &mut W) -> Result<usize, io::Error> {
+    fn consensus_encode<W: Write + ?Sized>(&self, w: &mut W) -> Result<usize, io::Error> {
         self.0.consensus_encode(w)
     }
 }
 
 impl Decodable for ScriptBuf {
     #[inline]
-    fn consensus_decode_from_finite_reader<R: io::Read + ?Sized>(
+    fn consensus_decode_from_finite_reader<R: BufRead + ?Sized>(
         r: &mut R,
     ) -> Result<Self, encode::Error> {
         Ok(ScriptBuf(Decodable::consensus_decode_from_finite_reader(r)?))
@@ -896,6 +917,8 @@ pub enum Error {
     Serialization,
 }
 
+internals::impl_from_infallible!(Error);
+
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         use Error::*;
@@ -942,6 +965,8 @@ enum UintError {
     EarlyEndOfScript,
     NumericOverflow,
 }
+
+internals::impl_from_infallible!(UintError);
 
 impl From<UintError> for Error {
     fn from(error: UintError) -> Self {

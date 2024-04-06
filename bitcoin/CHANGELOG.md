@@ -1,3 +1,8 @@
+# unreleased
+
+- Bump MSRV to Rust 1.56.1
+- Remove "no-std" feature
+
 # 0.31.1 - 2023-10-18
 
 - Bump MSRV to Rust 1.48.0 [#1729](https://github.com/rust-bitcoin/rust-bitcoin/pull/1729)
