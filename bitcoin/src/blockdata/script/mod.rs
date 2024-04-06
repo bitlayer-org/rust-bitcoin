@@ -47,22 +47,14 @@
 //! At the time of writing there's only one operation using the cache - `push_verify`, so the cache
 //! is minimal but we may extend it in the future if needed.
 
-use alloc::rc::Rc;
-#[cfg(any(not(rust_v_1_60), target_has_atomic = "ptr"))]
-use alloc::sync::Arc;
-use core::borrow::{Borrow, BorrowMut};
-use core::cmp::Ordering;
-use core::fmt;
-use core::ops::{Deref, DerefMut};
+
 use core::str::FromStr;
 
-use hashes::{hash160, sha256};
 #[cfg(feature = "serde")]
 use serde;
 
 use crate::blockdata::opcodes::all::*;
-use crate::blockdata::opcodes::{self, Opcode};
-use crate::consensus::{encode, Decodable, Encodable};
+
 use crate::prelude::*;
 use crate::{io, OutPoint};
 
@@ -91,7 +83,6 @@ use crate::blockdata::opcodes::{self, Opcode};
 use crate::consensus::{encode, Decodable, Encodable};
 use crate::internal_macros::impl_asref_push_bytes;
 use crate::prelude::*;
-use crate::OutPoint;
 
 #[rustfmt::skip]                // Keep public re-exports separate.
 #[doc(inline)]

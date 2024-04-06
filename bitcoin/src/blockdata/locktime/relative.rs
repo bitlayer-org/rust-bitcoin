@@ -13,12 +13,11 @@ use core::{cmp, convert, fmt};
 #[cfg(all(test, mutate))]
 use mutagen::mutate;
 
-use crate::parse::impl_parse_str_from_int_infallible;
 use crate::transaction::Sequence;
 use crate::prelude::*;
 #[cfg(doc)]
 use crate::relative;
-use crate::Sequence;
+// use crate::Sequence;
 
 #[rustfmt::skip]                // Keep public re-exports separate.
 #[doc(inline)]
