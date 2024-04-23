@@ -795,11 +795,11 @@ impl<'tree> DoubleEndedIterator for LeafNodes<'tree> {
 #[derive(Debug, Clone, PartialOrd, Ord)]
 pub struct NodeInfo {
     /// Merkle hash for this node.
-    pub(crate) hash: TapNodeHash,
+    pub hash: TapNodeHash,
     /// Information about leaves inside this node.
-    pub(crate) leaves: Vec<LeafNode>,
+    pub leaves: Vec<LeafNode>,
     /// Tracks information on hidden nodes below this node.
-    pub(crate) has_hidden_nodes: bool,
+    pub has_hidden_nodes: bool,
 }
 
 impl PartialEq for NodeInfo {
