@@ -850,6 +850,9 @@ impl NodeInfo {
     /// Creates an iterator over all leaves (including hidden leaves) in the tree.
     pub fn leaf_nodes(&self) -> LeafNodes { LeafNodes { leaf_iter: self.leaves.iter() } }
 
+    /// Get Leaf by index
+    pub fn get_leaf(&self, index: usize) -> Option<&LeafNode> { self.leaves.get(index) }
+
     /// Returns the root [`TapNodeHash`] of this node info.
     pub fn node_hash(&self) -> TapNodeHash { self.hash }
 }
