@@ -847,6 +847,27 @@ impl NodeInfo {
         })
     }
 
+
+    /// Combines two [`NodeInfo`] to create a new parent and returns left_first flag
+    pub fn combine_with_order(a: Self, b: Self) -> Result<(Self,bool), TaprootBuilderError> {
+        let mut all_leaves = Vec::with_capacity(a.leaves.len() + b.leaves.len());
+        let (hash, left_first) = TapNodeHash::combine_node_hashes(a.hash, b.hash);
+        let (a, b) = if left_first { (a, b) } else { (b, a) };
+        for mut a_leaf in a.leaves {
+            a_leaf.merkle_branch.push(b.hash)?; // add hashing partner
+            all_leaves.push(a_leaf);
+        }
+        for mut b_leaf in b.leaves {
+            b_leaf.merkle_branch.push(a.hash)?; // add hashing partner
+            all_leaves.push(b_leaf);
+        }
+        Ok((Self {
+            hash,
+            leaves: all_leaves,
+            has_hidden_nodes: a.has_hidden_nodes || b.has_hidden_nodes,
+        },left_first))
+    }
+
     /// Creates an iterator over all leaves (including hidden leaves) in the tree.
     pub fn leaf_nodes(&self) -> LeafNodes { LeafNodes { leaf_iter: self.leaves.iter() } }
 
