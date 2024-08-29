@@ -795,11 +795,11 @@ impl<'tree> DoubleEndedIterator for LeafNodes<'tree> {
 #[derive(Debug, Clone, PartialOrd, Ord)]
 pub struct NodeInfo {
     /// Merkle hash for this node.
-    pub(crate) hash: TapNodeHash,
+    pub hash: TapNodeHash,
     /// Information about leaves inside this node.
-    pub(crate) leaves: Vec<LeafNode>,
+    pub leaves: Vec<LeafNode>,
     /// Tracks information on hidden nodes below this node.
-    pub(crate) has_hidden_nodes: bool,
+    pub has_hidden_nodes: bool,
 }
 
 impl PartialEq for NodeInfo {
@@ -847,8 +847,31 @@ impl NodeInfo {
         })
     }
 
+    /// Combines two [`NodeInfo`] to create a new parent and returns left_first flag
+    pub fn combine_with_order(a: Self, b: Self) -> Result<(Self,bool), TaprootBuilderError> {
+        let mut all_leaves = Vec::with_capacity(a.leaves.len() + b.leaves.len());
+        let (hash, left_first) = TapNodeHash::combine_node_hashes(a.hash, b.hash);
+        let (a, b) = if left_first { (a, b) } else { (b, a) };
+        for mut a_leaf in a.leaves {
+            a_leaf.merkle_branch.push(b.hash)?; // add hashing partner
+            all_leaves.push(a_leaf);
+        }
+        for mut b_leaf in b.leaves {
+            b_leaf.merkle_branch.push(a.hash)?; // add hashing partner
+            all_leaves.push(b_leaf);
+        }
+        Ok((Self {
+            hash,
+            leaves: all_leaves,
+            has_hidden_nodes: a.has_hidden_nodes || b.has_hidden_nodes,
+        },left_first))
+    }   
+
     /// Creates an iterator over all leaves (including hidden leaves) in the tree.
     pub fn leaf_nodes(&self) -> LeafNodes { LeafNodes { leaf_iter: self.leaves.iter() } }
+
+    /// Get Leaf by index
+    pub fn get_leaf(&self, index: usize) -> Option<&LeafNode> { self.leaves.get(index) }
 
     /// Returns the root [`TapNodeHash`] of this node info.
     pub fn node_hash(&self) -> TapNodeHash { self.hash }
@@ -967,6 +990,8 @@ impl TapLeaf {
 
 /// Store information about taproot leaf node.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(crate = "actual_serde"))]
 pub struct LeafNode {
     /// The [`TapLeaf`]
     leaf: TapLeaf,
