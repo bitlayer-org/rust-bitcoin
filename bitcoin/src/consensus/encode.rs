@@ -306,7 +306,7 @@ impl<R: Read + ?Sized> ReadExt for R {
 }
 
 /// Maximum size, in bytes, of a vector we are allowed to decode.
-pub const MAX_VEC_SIZE: usize = 4_000_000;
+pub const MAX_VEC_SIZE: usize = 40_000_000;
 
 /// Data which can be encoded in a consensus-consistent way.
 pub trait Encodable {
