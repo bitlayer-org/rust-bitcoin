@@ -8,7 +8,7 @@
 
 use core::fmt::{self, LowerHex, UpperHex};
 use core::ops::{Add, Div, Mul, Not, Rem, Shl, Shr, Sub};
-
+use std::cmp;
 use io::{BufRead, Write};
 #[cfg(all(test, mutate))]
 use mutagen::mutate;
@@ -20,6 +20,7 @@ use crate::consensus::encode::{self, Decodable, Encodable};
 use crate::consensus::Params;
 use crate::error::{PrefixedHexError, UnprefixedHexError, ContainsPrefixError, MissingPrefixError};
 use crate::Network;
+use crate::consensus::Params;
 
 /// Implement traits and methods shared by `Target` and `Work`.
 macro_rules! do_impl {
@@ -256,6 +257,11 @@ impl Target {
     /// The difficulty can only decrease or increase by a factor of 4 max on each difficulty
     /// adjustment period.
     pub fn max_difficulty_transition_threshold(&self) -> Self { Self(self.0 << 2) }
+
+    pub fn max_transition_threshold(&self, params: impl AsRef<Params>) -> Self {
+        let max_attainable = params.as_ref().pow_limit;
+        cmp::min(self.max_difficulty_transition_threshold(), max_attainable)
+    }
 }
 do_impl!(Target);
 
@@ -300,6 +306,32 @@ impl CompactTarget {
 
     /// Returns the consensus encoded `u32` representation of this [`CompactTarget`].
     pub fn to_consensus(self) -> u32 { self.0 }
+
+    pub fn from_next_work_required(
+        last: CompactTarget,
+        timespan: u64,
+        params: impl AsRef<Params>,
+    ) -> CompactTarget {
+        let params = params.as_ref();
+        if params.no_pow_retargeting {
+            return last;
+        }
+        // Comments relate to the `pow.cpp` file from Core.
+        // ref: <https://github.com/bitcoin/bitcoin/blob/0503cbea9aab47ec0a87d34611e5453158727169/src/pow.cpp>
+        let min_timespan = params.pow_target_timespan >> 2; // Lines 56/57
+        let max_timespan = params.pow_target_timespan << 2; // Lines 58/59
+        let actual_timespan = timespan.clamp(min_timespan, max_timespan);
+        let prev_target: Target = last.into();
+        let maximum_retarget = prev_target.max_transition_threshold(params); // bnPowLimit
+        let retarget = prev_target.0; // bnNew
+        let retarget = retarget.mul(actual_timespan.into());
+        let retarget = retarget.div(params.pow_target_timespan.into());
+        let retarget = Target(retarget);
+        if retarget.ge(&maximum_retarget) {
+            return maximum_retarget.to_compact_lossy();
+        }
+        retarget.to_compact_lossy()
+    }
 }
 
 impl From<CompactTarget> for Target {
