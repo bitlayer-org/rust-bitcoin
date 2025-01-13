@@ -118,7 +118,12 @@ pub mod hmac;
 mod impls;
 pub mod ripemd160;
 pub mod sha1;
-pub mod sha256;
+pub mod sha2_256;
+pub mod sha2;
+#[cfg(feature = "sha2-hashes")]
+pub use sha2_256 as sha256;
+#[cfg(not(feature = "sha2-hashes"))]
+pub use sha2 as sha256;
 pub mod sha256d;
 pub mod sha256t;
 pub mod sha384;
