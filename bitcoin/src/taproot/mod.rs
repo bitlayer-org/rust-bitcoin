@@ -1571,7 +1571,7 @@ impl std::error::Error for TaprootError {
 mod test {
     use core::str::FromStr;
 
-    use hashes::sha256;
+    use hashes::sha2 as sha256;
     use hashes::sha256t::Tag;
     use hex::FromHex;
     use secp256k1::VerifyOnly;

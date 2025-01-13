@@ -14,13 +14,14 @@ rust-version = "1.56.1"
 exclude = ["tests", "contrib"]
 
 [features]
-default = ["std"]
+default = ["std", "sha2-hashes"]
 std = ["alloc", "hex/std", "bitcoin-io/std"]
 alloc = ["hex/alloc"]
 # If you want I/O you must enable either "std" or "io".
 io = ["bitcoin-io"]
 # Smaller (but slower) implementation of sha256, sha512 and ripemd160
 small-hash = []
+sha2-hashes = []
 
 [package.metadata.docs.rs]
 all-features = true
@@ -32,6 +33,9 @@ hex = { package = "hex-conservative", version = "0.2.0", default-features = fals
 bitcoin-io = { version = "0.1.1", default-features = false, optional = true }
 schemars = { version = "0.8.3", default-features = false, optional = true }
 serde = { version = "1.0", default-features = false, optional = true }
+
+sha2 = {version = "0.10"}
+cfg-if = "1.0"
 
 [dev-dependencies]
 serde_test = "1.0"

@@ -816,7 +816,7 @@ impl HashEngine {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{sha256, Hash as _, HashEngine};
+    use crate::{sha2 as sha256, Hash as _, HashEngine};
 
     #[test]
     #[cfg(feature = "alloc")]
