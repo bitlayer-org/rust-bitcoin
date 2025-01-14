@@ -1228,7 +1228,7 @@ mod tests {
 
     #[test]
     fn limit_read_test() {
-        let witness = vec![vec![0u8; 3_999_999]; 2];
+        let witness = vec![vec![0u8; 39_999_999]; 2];
         let ser = serialize(&witness);
         let mut reader = io::Cursor::new(ser);
         let err = Vec::<Vec<u8>>::consensus_decode(&mut reader);
